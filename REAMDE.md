@@ -5,7 +5,7 @@ Turtle-Bot 프로젝트에서 Ubuntu와 STM32 간 UART 통신에서 사용하는
 ## 1. Packet 구조
 
 ```
-| Header (2 byte) | Packet ID (1 byte) | Data (0 ~ 4 byte) |
+| Header (2 byte) | Packet ID (1 byte) | Data (0 ~ 6 byte) |
 |     AA 55       |        ID          |   ID에 따라 결정   |
 ```
 
@@ -13,14 +13,14 @@ Turtle-Bot 프로젝트에서 Ubuntu와 STM32 간 UART 통신에서 사용하는
 |---|---|---|---|
 | Header | 2 byte | `AA 55` | Packet 시작 표시 |
 | Packet ID | 1 byte | 3장 참고 | 상위 nibble = 종류, 하위 nibble = 대상 |
-| Data | 0 ~ 4 byte | 4장 참고 | 길이는 Packet ID로 결정되므로 Length 필드는 없다 |
+| Data | 0 ~ 6 byte | 4장 참고 | 길이는 Packet ID로 결정되므로 Length 필드는 없다 |
 
 ## 2. 데이터 형식
 
 | 항목 | 자료형 | 범위 | 비고 |
 |---|---|---|---|
-| Velocity | int16 (2의 보수) | -285 ~ 285 | 2 byte |
-| PSD | uint16 | 0 ~ 4095 | 2 byte (12bit) |
+| Velocity | int16 (2의 보수) | -285 ~ 285 | 2 byte, 채널 2개 (velocity0, velocity1) |
+| PSD | uint16 | 0 ~ 4095 | 2 byte (12bit), 채널 3개 (psd0, psd1, psd2) |
 | 시작/종료 | uint8 | `00`, `FF` | 1 byte |
 | 발행 주기 | uint16 | 0 ~ 65535 | 2 byte, 단위 ms, `0` = 자동발행 비활성화 |
 
@@ -41,18 +41,29 @@ Packet ID는 `상위 nibble = 종류`, `하위 nibble = 대상`으로 구성한�
 | `4x` | PSD 요청 | 요청 |
 | `5x` | 데이터 자동발행 주기 설정 | 설정 |
 
-| 하위 nibble | 대상 (`1x` ~ `4x`) |
+Velocity (`1x`, `2x`) 하위 nibble
+
+| 하위 nibble | 대상 |
 |---|---|
-| `0` | 채널 0 + 채널 1 |
-| `1` | 채널 0 |
-| `2` | 채널 1 |
+| `0` | velocity0 + velocity1 |
+| `1` | velocity0 |
+| `2` | velocity1 |
+
+PSD (`3x`, `4x`) 하위 nibble
+
+| 하위 nibble | 대상 |
+|---|---|
+| `0` | psd0 + psd1 + psd2 |
+| `1` | psd0 |
+| `2` | psd1 |
+| `3` | psd2 |
 
 `5x`는 하위 nibble의 의미가 다르다. 하위 nibble은 채널이 아니라 **자동발행 대상 데이터 종류**를 나타낸다.
 
 | 하위 nibble (`5x`) | 대상 |
 |---|---|
 | `0` | velocity (velocity0, velocity1) |
-| `1` | psd (psd0, psd1) |
+| `1` | psd (psd0, psd1, psd2) |
 
 ### 3.2 ID 목록
 
@@ -65,14 +76,16 @@ Packet ID는 `상위 nibble = 종류`, `하위 nibble = 대상`으로 구성한�
 | `20` | velocity0, velocity1 요청 | 없음 | 0 | 3 |
 | `21` | velocity0 요청 | 없음 | 0 | 3 |
 | `22` | velocity1 요청 | 없음 | 0 | 3 |
-| `30` | psd0, psd1 송신 | p0 (uint16), p1 (uint16) | 4 | 7 |
+| `30` | psd0, psd1, psd2 송신 | p0, p1, p2 (uint16 × 3) | 6 | 9 |
 | `31` | psd0 송신 | p0 (uint16) | 2 | 5 |
 | `32` | psd1 송신 | p1 (uint16) | 2 | 5 |
-| `40` | psd0, psd1 요청 | 없음 | 0 | 3 |
+| `33` | psd2 송신 | p2 (uint16) | 2 | 5 |
+| `40` | psd0, psd1, psd2 요청 | 없음 | 0 | 3 |
 | `41` | psd0 요청 | 없음 | 0 | 3 |
 | `42` | psd1 요청 | 없음 | 0 | 3 |
+| `43` | psd2 요청 | 없음 | 0 | 3 |
 | `50` | velocity0, velocity1 자동발행 주기 설정 | 발행 주기 (uint16) | 2 | 5 |
-| `51` | psd0, psd1 자동발행 주기 설정 | 발행 주기 (uint16) | 2 | 5 |
+| `51` | psd0, psd1, psd2 자동발행 주기 설정 | 발행 주기 (uint16) | 2 | 5 |
 
 ## 4. Data 필드
 
@@ -91,15 +104,16 @@ Packet ID는 `상위 nibble = 종류`, `하위 nibble = 대상`으로 구성한�
 | `11` | `v0_L` `v0_H` |
 | `12` | `v1_L` `v1_H` |
 
-### 4.3 PSD 송신 (`30`, `31`, `32`)
+### 4.3 PSD 송신 (`30`, `31`, `32`, `33`)
 
 | ID | Data 배치 (byte 순서) |
 |---|---|
-| `30` | `p0_L` `p0_H` `p1_L` `p1_H` |
+| `30` | `p0_L` `p0_H` `p1_L` `p1_H` `p2_L` `p2_H` |
 | `31` | `p0_L` `p0_H` |
 | `32` | `p1_L` `p1_H` |
+| `33` | `p2_L` `p2_H` |
 
-### 4.4 요청 (`20`, `21`, `22`, `40`, `41`, `42`)
+### 4.4 요청 (`20`, `21`, `22`, `40`, `41`, `42`, `43`)
 
 Data 필드가 없다. Header와 Packet ID만 전송한다.
 
@@ -116,7 +130,7 @@ Data 필드가 없다. Header와 Packet ID만 전송한다.
 | `1` ~ `65535` | 자동발행 활성화, 값은 발행 주기 (ms) |
 
 - `50`은 velocity0, velocity1을 한 주기로 함께 발행한다.
-- `51`은 psd0, psd1을 한 주기로 함께 발행한다.
+- `51`은 psd0, psd1, psd2를 한 주기로 함께 발행한다.
 
 ## 5. 요청과 응답
 
@@ -127,9 +141,10 @@ Data 필드가 없다. Header와 Packet ID만 전송한다.
 | `20` | `10` | velocity0, velocity1 |
 | `21` | `11` | velocity0 |
 | `22` | `12` | velocity1 |
-| `40` | `30` | psd0, psd1 |
+| `40` | `30` | psd0, psd1, psd2 |
 | `41` | `31` | psd0 |
 | `42` | `32` | psd1 |
+| `43` | `33` | psd2 |
 
 ### 5.1 자동발행
 
@@ -138,7 +153,7 @@ Data 필드가 없다. Header와 Packet ID만 전송한다.
 | 설정 ID | 자동발행 packet | 내용 |
 |---|---|---|
 | `50` | `10` | velocity0, velocity1 |
-| `51` | `30` | psd0, psd1 |
+| `51` | `30` | psd0, psd1, psd2 |
 
 - 주기 값 `0`을 받으면 해당 자동발행을 중지한다.
 - 자동발행 중에도 요청 packet(`2x`, `4x`)은 정상적으로 응답한다.
@@ -154,9 +169,12 @@ Data 필드가 없다. Header와 Packet ID만 전송한다.
 | velocity0 = -100 | `AA 55 11 9C FF` |
 | velocity1 = 50 | `AA 55 12 32 00` |
 | velocity0, velocity1 요청 | `AA 55 20` |
-| psd0 = 4095, psd1 = 2048 | `AA 55 30 FF 0F 00 08` |
+| psd0 = 4095, psd1 = 2048, psd2 = 0 | `AA 55 30 FF 0F 00 08 00 00` |
 | psd1 = 1000 | `AA 55 32 E8 03` |
+| psd2 = 1000 | `AA 55 33 E8 03` |
+| psd0, psd1, psd2 요청 | `AA 55 40` |
 | psd0 요청 | `AA 55 41` |
+| psd2 요청 | `AA 55 43` |
 | velocity 자동발행 10ms | `AA 55 50 0A 00` |
 | velocity 자동발행 비활성화 | `AA 55 50 00 00` |
 | psd 자동발행 100ms | `AA 55 51 64 00` |
@@ -196,13 +214,14 @@ Data 필드가 없다. Header와 Packet ID만 전송한다.
 |---|---|
 | Header 값 | `AA 55` (2 byte) |
 | 바이트 순서 | little-endian |
-| Velocity 자료형 | int16 (2의 보수) |
-| PSD 자료형 | uint16 |
+| Velocity 자료형 | int16 (2의 보수), 2채널 |
+| PSD 자료형 | uint16, 3채널 |
+| PSD 채널 번호 | 요구사항의 psd1, 2, 3을 기존 README의 0부터 시작하는 번호 체계에 맞춰 psd0, psd1, psd2로 표기 |
+| PSD 하위 nibble | `0` = 전체(3채널), `1` = psd0, `2` = psd1, `3` = psd2 |
 | 요청에 대한 응답 | 요청 ID - `10`에 해당하는 데이터 packet |
 | 데이터 방향 | Velocity는 호스트 → STM32 명령, PSD는 STM32 → 호스트 센서값 |
 | 발행 주기 자료형 | uint16, little-endian, 단위 ms |
 | `5x` 하위 nibble | 채널이 아닌 데이터 종류 (`0` = velocity, `1` = psd) |
-| 자동발행 대상 | `50` → `10` packet, `51` → `30` packet (두 채널 동시 발행) |
+| 자동발행 대상 | `50` → `10` packet, `51` → `30` packet (전체 채널 동시 발행) |
 | 주기 설정 응답 | `50`, `51`에 대한 별도 응답(ACK) packet은 없음 |
 | 원 요구사항의 `none` | 길이가 ID로 고정되므로 `50`, `51`은 항상 Data 2 byte를 가진다. Data 없는 형태는 정의하지 않음 |
-| PSD 채널 수 | 기존 README 기준 psd0, psd1 (2채널)로 통일 |
