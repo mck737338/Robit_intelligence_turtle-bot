@@ -1,6 +1,6 @@
 # RT-SU(Robit Turtle-bot STM32-Ubuntu) UART Packet Protocol
 
-Ubuntu와 STM32 간 UART 통신에서 사용하는 packet 구조
+Turtle-Bot 프로젝트에서 Ubuntu와 STM32 간 UART 통신에서 사용하는 packet 구조
 
 ## 1. Packet 구조
 
