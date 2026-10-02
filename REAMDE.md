@@ -1,4 +1,4 @@
-# RT-SU(Robit Turtle-bot STM32-ubuntu) UART Packet Protocol
+# RT-SU(Robit Turtle-bot STM32-Ubuntu) UART Packet Protocol
 
 호스트와 STM32 간 UART 통신에서 사용하는 packet 구조를 정의한다.
 
