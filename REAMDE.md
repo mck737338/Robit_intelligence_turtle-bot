@@ -24,11 +24,12 @@ mkdir -p ~/ros2_ws/src
 
 ## 3. 패키지 설치 (git clone)
 
-워크스페이스 이름이 ros2_ws가 아니라면 첫 줄을 생략하고 대신 해당 워크스페이스의 src로 이동하여 진행한다.
+워크스페이스 이름이 ros2_ws가 아니라면 마지막 줄의 ros2_ws를 해당 워크스페이스 이름으로 변경하여 진행한다.
 
 ```bash
-cd ~/ros2_ws/src
-git clone https://github.com/mck737338/Robit_intelligence_turtle-bot/tree/main/ROS2_Jazzy_Package/tb_uart
+cd ~
+git clone https://github.com/mck737338/Robit_intelligence_turtle-bot.git
+cp -r ~/Robit_intelligence_turtle-bot/ROS2_Jazzy_Package/tb_uart ~/ros2_ws/src/
 ```
 
 - 폴더 이름은 반드시 `tb_uart`여야 한다 (`package.xml`의 `<name>`과 일치).
@@ -49,6 +50,7 @@ git clone https://github.com/mck737338/Robit_intelligence_turtle-bot/tree/main/R
 - udev 규칙 추가: 로그인한 사용자가 `/dev/ttyUSB*`를 열 수 있게 함
 - 현재 사용자를 `dialout` 그룹에 추가
 - `brltty` 제거 (USB-UART 장치를 가로채는 것을 방지)
+- 위와 동일하게 ros2_ws를 워크스페이스 이름으로 변경하여 실행
 
 ```bash
 cd ~/ros2_ws/src/tb_uart
