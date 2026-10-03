@@ -16,7 +16,7 @@ sudo apt install -y git python3-colcon-common-extensions
 
 ## 2. 워크스페이스 생성
 
-이미 `~/ros2_ws`가 있으면 건너뛴다.
+이미 `~/ros2_ws`가 있거나 다른 워크스페이스를 사용하면 건너뛴다.
 
 ```bash
 mkdir -p ~/ros2_ws/src
@@ -24,11 +24,11 @@ mkdir -p ~/ros2_ws/src
 
 ## 3. 패키지 설치 (git clone)
 
-`<저장소 URL>`은 실제 tb_uart 저장소 주소로 바꾼다.
+워크스페이스 이름이 ros2_ws가 아니라면 첫 줄을 생략하고 대신 해당 워크스페이스의 src로 이동하여 진행한다.
 
 ```bash
 cd ~/ros2_ws/src
-git clone <저장소 URL> tb_uart
+git clone https://github.com/mck737338/Robit_intelligence_turtle-bot/tree/main/ROS2_Jazzy_Package/tb_uart
 ```
 
 - 폴더 이름은 반드시 `tb_uart`여야 한다 (`package.xml`의 `<name>`과 일치).
