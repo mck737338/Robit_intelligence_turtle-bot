@@ -1,7 +1,7 @@
 # tb_uart ROS 2 노드 Topic 명령
 
 `tb_uart_node`와 주고받는 ROS 2 topic 명령을 정리한 문서.
-tb_uart 노드가 STM32로 보내는 통신 패킷은 [STM32_Setup/README.md](STM32_Setup/README.md) 참조
+tb_uart 노드가 STM32로 보내는 통신 패킷은 [STM32_Setup/README.md](STM32_Setup/README.md) 참고
 
 ## 1. Topic
 
