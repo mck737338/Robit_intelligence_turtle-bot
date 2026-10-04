@@ -22,17 +22,21 @@ sudo apt install -y git python3-colcon-common-extensions
 mkdir -p ~/ros2_ws/src
 ```
 
-## 3. 패키지 설치 (git clone)
+## 3. tb_uart 패키지 설치 (git clone)
 
-워크스페이스 이름이 ros2_ws가 아니라면 마지막 줄의 ros2_ws를 해당 워크스페이스 이름으로 변경하여 진행한다.
+워크스페이스 이름이 ros2_ws가 아니라면 첫 줄의 ros2_ws를 해당 워크스페이스 이름으로 변경하여 진행한다.
 
 ```bash
-cd ~
-git clone https://github.com/mck737338/Robit_intelligence_turtle-bot.git
-cp -r ~/Robit_intelligence_turtle-bot/ROS2_Jazzy_Package/tb_uart ~/ros2_ws/src/
+path=~/ros2_ws/src   # 설치할 경로
+
+git clone --depth 1 --filter=blob:none --sparse https://github.com/mck737338/Robit_intelligence_turtle-bot.git /tmp/repo_tmp
+cd /tmp/repo_tmp
+git sparse-checkout set ROS2_Jazzy_Package/tb_uart
+
+cp -r ROS2_Jazzy_Package/tb_uart "$path"/
+cd ~ && rm -rf /tmp/repo_tmp
 ```
 
-- 폴더 이름은 반드시 `tb_uart`여야 한다 (`package.xml`의 `<name>`과 일치).
 - 설치 후 구조:
 ```
   ~/ros2_ws/src/tb_uart/
@@ -41,6 +45,21 @@ cp -r ~/Robit_intelligence_turtle-bot/ROS2_Jazzy_Package/tb_uart ~/ros2_ws/src/
   ├── setup_uart.sh
   ├── include/tb_uart/
   └── src/
+```
+
+## 3-1. test_node 패키지 설치(선택)
+
+위와 동일하게 워크스페이스 이름 확인하여 진행
+
+```bash
+path=~/ros2_ws/src
+
+git clone --depth 1 --filter=blob:none --sparse https://github.com/mck737338/Robit_intelligence_turtle-bot.git /tmp/repo_tmp
+cd /tmp/repo_tmp
+git sparse-checkout set ROS2_Jazzy_Package/test_node
+
+cp -r ROS2_Jazzy_Package/test_node "$path"/
+cd ~ && rm -rf /tmp/repo_tmp
 ```
 
 ## 4. UART 접근 권한 설정 (setup_uart.sh)
