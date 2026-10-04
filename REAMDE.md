@@ -47,6 +47,8 @@ cd ~ && rm -rf /tmp/repo_tmp
   └── src/
 ```
 
+tb_uart의 topic에 관한 내용은 [tb_uart/README.md](ROS2_Jazzy_Package/README.md) 참고
+
 ## 3-1. test_node 패키지 설치(선택)
 
 위와 동일하게 워크스페이스 이름 확인하여 진행
@@ -62,7 +64,7 @@ cp -r ROS2_Jazzy_Package/test_node "$path"/
 cd ~ && rm -rf /tmp/repo_tmp
 ```
 
-test_node의 사용방법은 [test_node/README.md](ROS2_Jazzy_Package/test_node/README.md)참고
+test_node의 사용방법은 [test_node/README.md](ROS2_Jazzy_Package/test_node/README.md) 참고
 
 ## 4. UART 접근 권한 설정 (setup_uart.sh)
 
