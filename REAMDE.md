@@ -62,6 +62,8 @@ cp -r ROS2_Jazzy_Package/test_node "$path"/
 cd ~ && rm -rf /tmp/repo_tmp
 ```
 
+test_node의 사용방법은 [test_node/README.md](ROS2_Jazzy_Package/test_node/README.md)참고
+
 ## 4. UART 접근 권한 설정 (setup_uart.sh)
 
 `setup_uart.sh`는 다음을 설정한다.
