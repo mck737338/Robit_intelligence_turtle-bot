@@ -14,10 +14,18 @@ class RtU2sUart {
 public:
   using VelocityCallback = std::function<void(const int16_t v[2])>;   // velocity0, velocity1
   using PsdCallback      = std::function<void(const uint16_t p[3])>;  // psd0, psd1, psd2
+  using VelocityOneCallback = std::function<void(int index, int16_t value)>;    // 개별 velocity (index 0, 1)
+  using PsdOneCallback      = std::function<void(int index, uint16_t value)>;   // 개별 psd (index 0, 1, 2)
+  using ProgramCallback  = std::function<void(bool start)>;   // true: 시작(00), false: 종료(FF)
   using LogCallback      = std::function<void(const std::string &msg)>;
+
+  // target: 0 공통(60), 1 velocity(61), 2 psd(62) / code: 에러 코드, name: 코드 이름
+  using ErrorCallback = std::function<void(int target, uint8_t code, const char *name)>;
+  
 
   // 초기화
   bool rt_u2s_init(int channel, unsigned int baudrate);
+  void rt_u2s_close();   // 포트 닫기
 
   // 시작/종료 (ID 00)
   bool send_start();
@@ -48,7 +56,12 @@ public:
   int receive(int timeout_ms);
   void set_velocity_callback(VelocityCallback cb) { vel_cb_ = std::move(cb); }
   void set_psd_callback(PsdCallback cb) { psd_cb_ = std::move(cb); }
+  void set_program_callback(ProgramCallback cb) { prog_cb_ = std::move(cb); }
   void set_log_callback(LogCallback cb) { log_cb_ = std::move(cb); }
+  void set_velocity_one_callback(VelocityOneCallback cb) { vel_one_cb_ = std::move(cb); }
+  void set_psd_one_callback(PsdOneCallback cb) { psd_one_cb_ = std::move(cb); }
+    void set_error_callback(ErrorCallback cb) { err_cb_ = std::move(cb); }
+  
 
 private:
   enum class State { H1, H2, ID, DATA };
@@ -58,12 +71,16 @@ private:
   void feed(uint8_t b);
   void handle_packet();
   void log(const std::string &msg) { if (log_cb_) log_cb_(msg); }
+  VelocityOneCallback vel_one_cb_;
+  PsdOneCallback psd_one_cb_;
+  ErrorCallback err_cb_;
 
   UbuntuUart uart_;
   int channel_{0};
 
   VelocityCallback vel_cb_;
   PsdCallback psd_cb_;
+  ProgramCallback prog_cb_;
   LogCallback log_cb_;
 
   State state_{State::H1};

@@ -97,12 +97,20 @@ int UbuntuUart::receive(int channel, uint8_t *buffer, int length, int timeout_ms
   int ret = poll(&pfd, 1, timeout_ms);
   if (ret < 0) return (errno == EINTR) ? 0 : -1;
   if (ret == 0) return 0;
-  if (pfd.revents & (POLLERR | POLLNVAL)) return -1;
+  if (pfd.revents & (POLLERR | POLLNVAL | POLLHUP)) return -1;   // 장치 분리
 
   ssize_t n = read(fd, buffer, length);
   if (n > 0) return static_cast<int>(n);
   if (n < 0 && (errno == EAGAIN || errno == EINTR)) return 0;
   return -1;   // 장치 분리 또는 read 오류
+}
+
+void UbuntuUart::uart_close(int channel)
+{
+  auto it = fds_.find(channel);
+  if (it == fds_.end()) return;
+  close(it->second);
+  fds_.erase(it);
 }
 
 }  // namespace tb

@@ -23,6 +23,9 @@ public:
   // 타임아웃이면 0, 오류/장치 분리 시 -1
   int receive(int channel, uint8_t *buffer, int length, int timeout_ms);
 
+  // 포트 닫기
+  void uart_close(int channel);
+
 private:
   std::map<int, int> fds_;   // channel -> fd
 };

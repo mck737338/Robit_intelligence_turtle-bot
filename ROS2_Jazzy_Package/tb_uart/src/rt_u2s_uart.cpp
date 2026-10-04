@@ -41,12 +41,16 @@ constexpr uint8_t VEL_IDS[2]     = {ID_VEL0, ID_VEL1};
 constexpr uint8_t VEL_REQ_IDS[2] = {ID_VEL_REQ0, ID_VEL_REQ1};
 constexpr uint8_t PSD_IDS[3]     = {ID_PSD0, ID_PSD1, ID_PSD2};
 constexpr uint8_t PSD_REQ_IDS[3] = {ID_PSD_REQ0, ID_PSD_REQ1, ID_PSD_REQ2};
+constexpr uint8_t ID_ERR_COMMON   = 0x60;
+constexpr uint8_t ID_ERR_VELOCITY = 0x61;
+constexpr uint8_t ID_ERR_PSD      = 0x62;
 
 // ---------- 유틸 ----------
 // 수신 대상 packet의 Data 길이. 수신 대상이 아니면 -1
 int rx_data_length(uint8_t id)
 {
   switch (id) {
+    case ID_PROGRAM: return 1;
     case ID_VEL_ALL: return 4;
     case ID_VEL0:
     case ID_VEL1:    return 2;
@@ -54,6 +58,9 @@ int rx_data_length(uint8_t id)
     case ID_PSD0:
     case ID_PSD1:
     case ID_PSD2:    return 2;
+    case ID_ERR_COMMON:
+    case ID_ERR_VELOCITY:
+    case ID_ERR_PSD: return 1;
     default:         return -1;
   }
 }
@@ -79,6 +86,20 @@ std::string to_hex(const uint8_t *d, int len)
   return s;
 }
 
+// 에러 코드 이름. target: 0 공통, 1 velocity, 2 psd. 허용되지 않은 코드는 nullptr
+const char *error_name(int target, uint8_t code)
+{
+  switch (code) {
+    case 0x01: return (target == 0) ? "UNKNOWN_ID" : nullptr;
+    case 0x02: return "INVALID_DATA";
+    case 0x03: return (target == 0) ? "TIMEOUT" : nullptr;
+    case 0x04: return (target == 0) ? "NOT_STARTED" : nullptr;
+    case 0x10: return (target == 1 || target == 2) ? "SENSOR_FAULT" : nullptr;
+    case 0x11: return (target == 1) ? "MOTOR_FAULT" : nullptr;
+    default:   return nullptr;
+  }
+}
+
 const char *id_name(uint8_t id)
 {
   switch (id) {
@@ -99,6 +120,9 @@ const char *id_name(uint8_t id)
     case ID_PSD_REQ2:    return "psd2 request";
     case ID_PUB_VEL:     return "velocity period";
     case ID_PUB_PSD:     return "psd period";
+    case ID_ERR_COMMON:   return "error common";
+    case ID_ERR_VELOCITY: return "error velocity";
+    case ID_ERR_PSD:      return "error psd";
     default:             return "unknown";
   }
 }
@@ -114,6 +138,12 @@ bool RtU2sUart::rt_u2s_init(int channel, unsigned int baudrate)
   log("[UART] init channel " + std::to_string(channel) + " @ " +
       std::to_string(baudrate) + " baud : " + (ok ? "OK" : "FAILED"));
   return ok;
+}
+
+void RtU2sUart::rt_u2s_close()
+{
+  uart_.uart_close(channel_);
+  state_ = State::H1;
 }
 
 // ---------- 공통 송신 ----------
@@ -286,6 +316,34 @@ void RtU2sUart::handle_packet()
   log(std::string("[UART RX] ") + id_name(id_) + " : " + to_hex(raw_, 3 + len_));
 
   switch (id_) {
+    case ID_PROGRAM: {
+      if (data_[0] == START_VALUE) {
+        log("[UART RX]   stm32 start");
+        if (prog_cb_) prog_cb_(true);
+      } else if (data_[0] == END_VALUE) {
+        log("[UART RX]   stm32 quit");
+        if (prog_cb_) prog_cb_(false);
+      } else {
+        log("[UART RX] invalid start/end value, discarded: " + to_hex(&data_[0], 1));
+      }
+      break;
+    }
+
+    case ID_ERR_COMMON:
+    case ID_ERR_VELOCITY:
+    case ID_ERR_PSD: {
+      const int target = id_ - ID_ERR_COMMON;   // 0 공통, 1 velocity, 2 psd
+      const uint8_t code = data_[0];
+      const char *name = error_name(target, code);
+      if (name == nullptr) {
+        log("[UART RX] invalid error code, discarded: " + to_hex(&data_[0], 1));
+        break;
+      }
+      log(std::string("[UART RX]   error ") + id_name(id_) + " : " + name);
+      if (err_cb_) err_cb_(target, code, name);
+      break;
+    }
+
     case ID_VEL_ALL: {
       const int16_t v[2] = {get_i16(&data_[0]), get_i16(&data_[2])};
       log("[UART RX]   velocity0 = " + std::to_string(v[0]) +
@@ -303,8 +361,26 @@ void RtU2sUart::handle_packet()
       break;
     }
 
+        case ID_VEL0:
+    case ID_VEL1: {
+      const int index = (id_ == ID_VEL0) ? 0 : 1;
+      const int16_t v = get_i16(&data_[0]);
+      log("[UART RX]   velocity" + std::to_string(index) + " = " + std::to_string(v));
+      if (vel_one_cb_) vel_one_cb_(index, v);
+      break;
+    }
+
+    case ID_PSD0:
+    case ID_PSD1:
+    case ID_PSD2: {
+      const int index = id_ - ID_PSD0;
+      const uint16_t p = get_u16(&data_[0]);
+      log("[UART RX]   psd" + std::to_string(index) + " = " + std::to_string(p));
+      if (psd_one_cb_) psd_one_cb_(index, p);
+      break;
+    }
+
     default:
-      // 개별 packet(11, 12, 31, 32, 33)은 로그만 남기고 callback은 호출하지 않음
       break;
   }
 }
