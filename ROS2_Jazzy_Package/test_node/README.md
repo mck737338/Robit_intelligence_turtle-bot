@@ -1,13 +1,13 @@
 # test_node
 
-ROS 2 Jazzy용 터미널 입출력 테스트 패키지입니다. 노드 2개로 구성됩니다.
+ROS 2 Jazzy용 터미널 입출력 테스트용 패키지이다. publisher, subscriber 노드 2개로 구성
 
 | 노드 | 파일 | 역할 |
 |------|------|------|
 | `pub_node` | `test_node/pub_node.py` | 터미널에 입력한 텍스트를 `tx_topic`으로 그대로 publish |
 | `sub_node` | `test_node/sub_node.py` | `rx_topic`을 subscribe하여 받은 값을 터미널에 출력 |
 
-기본 토픽 설정은 다음과 같습니다. 메시지 타입은 `std_msgs/String`입니다.
+기본 토픽 설정은 다음과 같음. 메시지 타입은 `std_msgs/String`
 
 | 변수 | 기본값 | 위치 |
 |------|--------|------|
@@ -22,22 +22,11 @@ ROS 2 Jazzy용 터미널 입출력 테스트 패키지입니다. 노드 2개로 
 
 ## 1. 워크스페이스에 설치
 
-워크스페이스 이름은 자유롭게 정할 수 있습니다. `WS_NAME`과 `REPO_URL`만 환경에 맞게 수정하세요.
-
-```bash
-# ===== 설정 =====
-WS_NAME=ros2_ws                                   # 워크스페이스 이름
-REPO_URL=https://github.com/<user>/test_node.git  # 저장소 주소
-
-# ===== 워크스페이스 src 폴더에 clone =====
-mkdir -p ~/${WS_NAME}/src
-cd ~/${WS_NAME}/src
-git clone ${REPO_URL}
-```
+[main/README.md](https://github.com/mck737338/Robit_intelligence_turtle-bot/blob/main/REAMDE.md) 의 3-1 참고
 
 ## 2. 토픽 이름 수정
 
-사용할 토픽에 맞게 아래 변수를 수정합니다.
+사용할 토픽에 맞게 아래 변수를 수정하여 사용
 
 ```python
 # test_node/pub_node.py
@@ -47,7 +36,7 @@ tx_topic = 'TB_Uart_RX'   # 터미널 입력을 publish할 토픽
 rx_topic = 'TB_Uart_TX'   # subscribe하여 터미널에 출력할 토픽
 ```
 
-> 수정 후에는 반드시 다시 빌드해야 적용됩니다.
+> 수정 후에는 반드시 다시 빌드해야 적용
 
 ## 3. 빌드
 
@@ -59,7 +48,7 @@ source install/setup.bash
 
 ## 4. 실행
 
-터미널을 두 개 열고 각각 `source install/setup.bash`를 한 뒤 실행합니다.
+터미널을 두 개 열고 각각 `source install/setup.bash`를 한 뒤 실행
 
 ```bash
 # 터미널 1: 입력한 텍스트를 tx_topic으로 publish (Enter로 전송)
@@ -69,7 +58,6 @@ ros2 run test_node pub_node
 ros2 run test_node sub_node
 ```
 
-종료는 `Ctrl+C`입니다.
 
 ## 5. 동작 확인
 
@@ -81,7 +69,7 @@ ros2 topic echo /TB_Uart_RX
 ros2 topic pub --once /TB_Uart_TX std_msgs/msg/String "{data: 'hello'}"
 ```
 
-토픽 이름을 바꿨다면 위 명령의 토픽 이름도 같이 바꿔주세요.
+토픽 이름을 바꿨다면 위 명령의 토픽 이름도 같이 변경
 
 ## 파일 구조
 
@@ -101,5 +89,5 @@ test_node/
 
 ## 문제 해결
 
-- `can't copy '.../resource/test_node'` 에러: `resource/test_node` 빈 파일이 없는 경우입니다. `touch resource/test_node` 후 `build/test_node`, `install/test_node`를 지우고 다시 빌드하세요.
+- `can't copy '.../resource/test_node'` 에러: `resource/test_node` 빈 파일이 없는 경우. `touch resource/test_node` 후 `build/test_node`, `install/test_node`를 지우고 다시 빌드하세요.
 - `Package 'test_node' not found`: 빌드 실패 또는 `source install/setup.bash`를 하지 않은 경우입니다.
