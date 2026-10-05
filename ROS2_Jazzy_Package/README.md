@@ -40,7 +40,7 @@ tb_uart 노드가 STM32로 보내는 통신 패킷은 [STM32_Setup/README.md](..
 | `psd id set <idF> <idL> <idR>` | psd F, L, R에 대응하는 STM32 번호 | `0 1 2` |
 
 - velocity는 0~1, psd는 0~2 범위이며 서로 중복되면 안 된다.
-- 예: `velocity id set: 1 0` 설정 시 L은 STM32 velocity1, R은 velocity0이다.
+- 예: `velocity id set 1 0` 설정 시 L은 STM32 velocity1, R은 velocity0이다.
 
 ### 2.4 velocity 전송
 
@@ -50,7 +50,7 @@ tb_uart 노드가 STM32로 보내는 통신 패킷은 [STM32_Setup/README.md](..
 | `velocity L <v>` | L velocity만 전송 |
 | `velocity R <v>` | R velocity만 전송 |
 
-- 예 (idL=1, idR=0): `velocity: 50 100` → STM32에 {velocity0=100, velocity1=50} 전송
+- 예 (idL=1, idR=0): `velocity 50 100` → STM32에 {velocity0=100, velocity1=50} 전송
 
 ### 2.5 데이터 요청
 
@@ -64,39 +64,56 @@ tb_uart 노드가 STM32로 보내는 통신 패킷은 [STM32_Setup/README.md](..
 | `get psd L` | L psd 요청 |
 | `get psd R` | R psd 요청 |
 
-### 2.6 처리 조건
+### 2.6 psd 필터 설정
+
+| 명령 | 동작 |
+|---|---|
+| `filter <N>` | psd 이동 평균 필터 누적 개수 설정 |
+
+- `<N>`은 1 ~ 65535인 정수이며, `1`이면 필터를 적용하지 않는다.
+- 설정한 값은 psd0, psd1, psd2 모든 채널에 동일하게 적용된다.
+- `0`이나 범위를 벗어난 값은 STM32로 송신하지 않고 `error filter size out of range (1 ~ 65535): <값>`을 발행한다.
+- 예: `filter 10` → 이동 평균 필터 크기를 10으로 설정
+
+### 2.7 처리 조건
 
 | 명령 | `start` 전 |
 |---|---|
-| `start`, `velocity id set`, `psd id set` | 처리됨 |
-| 그 외 모든 명령 | `not started` 경고 후 무시 |
+| `start` | 처리됨 |
+| 그 외 모든 명령 (`filter` 포함) | 에러 로그 출력 및 `error ...` 발행 후 무시 (STM32로 송신하지 않음) |
 
-- 정의되지 않은 문자열은 `unknown command` 경고 후 무시한다.
+- STM32에서 시작 packet을 수신해 작동 중일 때만 `start` 외 명령을 처리한다.
+- 정의되지 않은 문자열은 `unknown command` 에러를 발행하고 무시한다.
 
 ## 3. 수신 값 (TOPIC_STATUS)
 
 | 발행 값 | 의미 | 값 순서 |
 |---|---|---|
-| `velocity <L> <R>` | velocity 수신 값 | L, R |
-| `psd <F> <L> <R>` | psd 수신 값 | F, L, R |
+| `velocity <L> <R>` | velocity 수신 값 (2개) | L, R |
+| `velocity L <v>` / `velocity R <v>` | velocity 개별 수신 값 | - |
+| `psd <F> <L> <R>` | psd 수신 값 (3개) | F, L, R |
+| `psd F <v>` / `psd L <v>` / `psd R <v>` | psd 개별 수신 값 | - |
+| `stm32 start` / `stm32 quit` | STM32 시작/종료 수신 | - |
+| `error <메시지>` | 노드 에러, STM32 에러 (`error stm32 <common\|velocity\|psd> <코드이름>`) | - |
 
 - 값은 정수이며 공백으로 구분한다.
-- velocity 두 값, psd 세 값이 함께 수신될 때만 발행한다. 개별 값(`velocity x: ~`, `psd x: ~`)은 발행하지 않는다.
-- `get velocity`, `get psd` 요청의 응답과 자동 발행 값이 발행된다. 개별 요청(`get velocity L` 등)의 응답은 발행되지 않는다.
 - 수신 값에 범위 검사는 없으며 STM32가 보낸 값을 그대로 발행한다.
 - 발행 순서는 2.3의 ID 설정에 따른다.
+- 첫 단어(`velocity`, `psd`, `stm32`, `error`)로 구분해 처리한다.
 
-예 (기본 ID 설정): 
-
-```
-velocity: 285 -285
-psd: 4095 2048 0
-```
-
-예 (`velocity id set: 1 0` 설정 후 같은 수신값):
+예 (기본 ID 설정):
 
 ```
-velocity: -285 285
+velocity 285 -285
+psd 4095 2048 0
+velocity L 100
+psd F 1000
+```
+
+예 (`velocity id set 1 0` 설정 후 같은 수신값):
+
+```
+velocity -285 285
 ```
 
 ## 4. 사용 예
@@ -109,11 +126,12 @@ ros2 topic echo /TB_Uart_TX
 
 # 명령 전송
 ros2 topic pub --once /TB_Uart_RX std_msgs/msg/String "{data: 'start'}"
-ros2 topic pub --once /TB_Uart_RX std_msgs/msg/String "{data: 'velocity id set: 1 0'}"
-ros2 topic pub --once /TB_Uart_RX std_msgs/msg/String "{data: 'psd id set: 2 0 1'}"
-ros2 topic pub --once /TB_Uart_RX std_msgs/msg/String "{data: 'velocity period: 10'}"
-ros2 topic pub --once /TB_Uart_RX std_msgs/msg/String "{data: 'psd period: 100'}"
-ros2 topic pub --once /TB_Uart_RX std_msgs/msg/String "{data: 'velocity: 50 100'}"
+ros2 topic pub --once /TB_Uart_RX std_msgs/msg/String "{data: 'velocity id set 1 0'}"
+ros2 topic pub --once /TB_Uart_RX std_msgs/msg/String "{data: 'psd id set 2 0 1'}"
+ros2 topic pub --once /TB_Uart_RX std_msgs/msg/String "{data: 'velocity period 10'}"
+ros2 topic pub --once /TB_Uart_RX std_msgs/msg/String "{data: 'psd period 100'}"
+ros2 topic pub --once /TB_Uart_RX std_msgs/msg/String "{data: 'filter 10'}"
+ros2 topic pub --once /TB_Uart_RX std_msgs/msg/String "{data: 'velocity 50 100'}"
 ros2 topic pub --once /TB_Uart_RX std_msgs/msg/String "{data: 'get psd'}"
-ros2 topic pub --once /tb_uart/command std_msgs/msg/String "{data: 'quit'}"
+ros2 topic pub --once /TB_Uart_RX std_msgs/msg/String "{data: 'quit'}"
 ```
