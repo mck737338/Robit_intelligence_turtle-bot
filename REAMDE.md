@@ -66,7 +66,7 @@ cd ~ && rm -rf /tmp/repo_tmp
 
 test_node의 사용방법은 [test_node/README.md](ROS2_Jazzy_Package/test_node/README.md) 참고
 
-## 3-1. keyboard_control 패키지 설치(선택)
+## 3-2. keyboard_control 패키지 설치(선택)
 
 위와 동일하게 워크스페이스 이름 확인하여 진행
 
@@ -81,7 +81,7 @@ cp -r ROS2_Jazzy_Package/keyboard_control "$path"/
 cd ~ && rm -rf /tmp/repo_tmp
 ```
 
-keyboard_control의 사용방법은 [test_node/README.md](ROS2_Jazzy_Package/keyboard_control/README.md) 참고
+keyboard_control의 사용방법은 [keyboard_control/README.md](ROS2_Jazzy_Package/keyboard_control/README.md) 참고
 
 ## 4. UART 접근 권한 설정 (setup_uart.sh)
 
