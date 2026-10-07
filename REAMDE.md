@@ -66,6 +66,23 @@ cd ~ && rm -rf /tmp/repo_tmp
 
 test_node의 사용방법은 [test_node/README.md](ROS2_Jazzy_Package/test_node/README.md) 참고
 
+## 3-1. keyboard_control 패키지 설치(선택)
+
+위와 동일하게 워크스페이스 이름 확인하여 진행
+
+```bash
+path=~/turtle_ws/src
+
+git clone --depth 1 --filter=blob:none --sparse https://github.com/mck737338/Robit_intelligence_turtle-bot.git /tmp/repo_tmp
+cd /tmp/repo_tmp
+git sparse-checkout set ROS2_Jazzy_Package/keyboard_control
+
+cp -r ROS2_Jazzy_Package/keyboard_control "$path"/
+cd ~ && rm -rf /tmp/repo_tmp
+```
+
+keyboard_control의 사용방법은 [test_node/README.md](ROS2_Jazzy_Package/keyboard_control/README.md) 참고
+
 ## 4. UART 접근 권한 설정 (setup_uart.sh)
 
 `setup_uart.sh`는 다음을 설정한다.
