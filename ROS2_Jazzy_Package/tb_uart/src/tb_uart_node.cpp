@@ -190,6 +190,45 @@ void TbUartNode::on_command(const std_msgs::msg::String::SharedPtr msg)
     return;
   }
 
+  // ---------- filter <N> ----------
+  if (t[0] == "filter" && n == 2 && to_int(t[1], a)) {
+    if (a < 1 || a > 65535) {
+      publish_error("filter size out of range (1 ~ 65535): " + std::to_string(a));
+      return;
+    }
+    rt_.send_filter_size(static_cast<uint16_t>(a));
+    return;
+  }
+
+  // ---------- direction ... ----------
+  if (t[0] == "direction") {
+    // direction <L> <R>
+    if (n == 3 && to_int(t[1], a) && to_int(t[2], b)) {
+      if ((a != 1 && a != -1) || (b != 1 && b != -1)) {
+        publish_error("invalid direction (1 or -1): " + std::to_string(a) + " " + std::to_string(b));
+        return;
+      }
+      std::lock_guard<std::mutex> lk(mtx_);
+      dirL_ = a;
+      dirR_ = b;
+      RCLCPP_INFO(get_logger(), "direction set: dirL=%d dirR=%d", dirL_, dirR_);
+      return;
+    }
+
+    // direction L <v> / direction R <v>
+    if (n == 3 && (t[1] == "L" || t[1] == "R") && to_int(t[2], a)) {
+      if (a != 1 && a != -1) {
+        publish_error("invalid direction (1 or -1): " + std::to_string(a));
+        return;
+      }
+      std::lock_guard<std::mutex> lk(mtx_);
+      if (t[1] == "L") dirL_ = a;
+      else dirR_ = a;
+      RCLCPP_INFO(get_logger(), "direction set: dirL=%d dirR=%d", dirL_, dirR_);
+      return;
+    }
+  }
+
   // ---------- velocity ... ----------
   if (t[0] == "velocity") {
     // velocity period <ms>
@@ -214,12 +253,13 @@ void TbUartNode::on_command(const std_msgs::msg::String::SharedPtr msg)
 
     // velocity L <v> / velocity R <v>
     if (n == 3 && (t[1] == "L" || t[1] == "R") && to_int(t[2], a)) {
-      int id;
+      int id, v;
       {
         std::lock_guard<std::mutex> lk(mtx_);
-        id = (t[1] == "L") ? idL_ : idR_;
+        if (t[1] == "L") { id = idL_; v = a * dirL_; }
+        else             { id = idR_; v = a * dirR_; }
       }
-      rt_.send_velocity(id, a);
+      rt_.send_velocity(id, v);
       return;
     }
 
@@ -228,8 +268,8 @@ void TbUartNode::on_command(const std_msgs::msg::String::SharedPtr msg)
       int vel[2];
       {
         std::lock_guard<std::mutex> lk(mtx_);
-        vel[idL_] = a;   // Lvelocity -> idL 위치
-        vel[idR_] = b;   // Rvelocity -> idR 위치
+        vel[idL_] = a * dirL_;   // Lvelocity -> idL 위치 (방향 곱)
+        vel[idR_] = b * dirR_;   // Rvelocity -> idR 위치 (방향 곱)
       }
       rt_.send_velocities(vel);
       return;
@@ -358,6 +398,7 @@ void TbUartNode::on_psd_one(int index, uint16_t value)
     publish_text("psd R " + std::to_string(value));
   }
 }
+
 void TbUartNode::on_program(bool start)
 {
   running_state_ = start;

@@ -51,6 +51,9 @@ public:
   bool send_velocity_period(uint16_t period_ms);
   bool send_psd_period(uint16_t period_ms);
 
+  // psd 필터 누적 개수 (ID 52), 1 ~ 65535
+  bool send_filter_size(uint16_t size);
+
   // 수신: 바이트를 파싱해 완성된 packet마다 처리. 수신 바이트 수 반환 (타임아웃 0, 오류 -1)
   // ID 10 수신 시 velocity callback, ID 30 수신 시 psd callback 호출
   int receive(int timeout_ms);

@@ -32,6 +32,7 @@ constexpr uint8_t ID_PSD_REQ2    = 0x43;
 
 constexpr uint8_t ID_PUB_VEL = 0x50;
 constexpr uint8_t ID_PUB_PSD = 0x51;
+constexpr uint8_t ID_FILTER = 0x52;
 
 constexpr uint8_t START_VALUE = 0x00;
 constexpr uint8_t END_VALUE   = 0xFF;
@@ -120,6 +121,7 @@ const char *id_name(uint8_t id)
     case ID_PSD_REQ2:    return "psd2 request";
     case ID_PUB_VEL:     return "velocity period";
     case ID_PUB_PSD:     return "psd period";
+    case ID_FILTER:      return "psd filter size";
     case ID_ERR_COMMON:   return "error common";
     case ID_ERR_VELOCITY: return "error velocity";
     case ID_ERR_PSD:      return "error psd";
@@ -261,6 +263,11 @@ bool RtU2sUart::send_velocity_period(uint16_t period_ms)
 bool RtU2sUart::send_psd_period(uint16_t period_ms)
 {
   return send_u16_packet(ID_PUB_PSD, period_ms);
+}
+
+bool RtU2sUart::send_filter_size(uint16_t size)
+{
+  return send_u16_packet(ID_FILTER, size);
 }
 
 // ---------- 수신 ----------
