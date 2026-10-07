@@ -47,7 +47,7 @@ cd ~ && rm -rf /tmp/repo_tmp
   └── src/
 ```
 
-tb_uart의 topic에 관한 내용은 [tb_uart/README.md](ROS2_Jazzy_Package/README.md) 참고
+tb_uart의 topic에 관한 내용은 [tb_uart/TB_Uart_Instruction.md](ROS2_Jazzy_Package/TB_Uart_Instruction.md) 참고
 
 ## 3-1. test_node 패키지 설치(선택)
 
