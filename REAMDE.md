@@ -16,18 +16,18 @@ sudo apt install -y git python3-colcon-common-extensions
 
 ## 2. 워크스페이스 생성
 
-이미 `~/turtle_ws`가 있거나 다른 워크스페이스를 사용하면 건너뛴다.
+이미 `~/turtlebot_ws`가 있거나 다른 워크스페이스를 사용하면 건너뛴다.
 
 ```bash
-mkdir -p ~/turtle_ws/src
+mkdir -p ~/turtlebot_ws/src
 ```
 
 ## 3. tb_uart 패키지 설치 (git clone)
 
-워크스페이스 이름이 turtle_ws가 아니라면 첫 줄의 turtle_ws를 해당 워크스페이스 이름으로 변경하여 진행한다.
+워크스페이스 이름이 turtlebot_ws가 아니라면 첫 줄의 turtle_ws를 해당 워크스페이스 이름으로 변경하여 진행한다.
 
 ```bash
-path=~/turtle_ws/src   # 설치할 경로
+path=~/turtlebot_ws/src   # 설치할 경로
 
 git clone --depth 1 --filter=blob:none --sparse https://github.com/mck737338/Robit_intelligence_turtle-bot.git /tmp/repo_tmp
 cd /tmp/repo_tmp
@@ -39,7 +39,7 @@ cd ~ && rm -rf /tmp/repo_tmp
 
 - 설치 후 구조:
 ```
-  ~/turtle_ws/src/tb_uart/
+  ~/turtlebot_ws/src/tb_uart/
   ├── CMakeLists.txt
   ├── package.xml
   ├── setup_uart.sh
@@ -54,7 +54,7 @@ tb_uart의 topic에 관한 내용은 [tb_uart/TB_Uart_Instruction.md](ROS2_Jazzy
 위와 동일하게 워크스페이스 이름 확인하여 진행
 
 ```bash
-path=~/turtle_ws/src
+path=~/turtlebot_ws/src
 
 git clone --depth 1 --filter=blob:none --sparse https://github.com/mck737338/Robit_intelligence_turtle-bot.git /tmp/repo_tmp
 cd /tmp/repo_tmp
@@ -71,7 +71,7 @@ test_node의 사용방법은 [test_node/README.md](ROS2_Jazzy_Package/test_node/
 위와 동일하게 워크스페이스 이름 확인하여 진행
 
 ```bash
-path=~/turtle_ws/src
+path=~/turtlebot_ws/src
 
 git clone --depth 1 --filter=blob:none --sparse https://github.com/mck737338/Robit_intelligence_turtle-bot.git /tmp/repo_tmp
 cd /tmp/repo_tmp
